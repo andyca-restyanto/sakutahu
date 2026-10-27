@@ -1,0 +1,26 @@
+# filepath: /docker-compose.yml
+# Infrastruktur development: PostgreSQL + Mailpit (SMTP palsu untuk melihat email verifikasi)
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sakutahu
+      POSTGRES_USER: sakutahu
+      POSTGRES_PASSWORD: sakutahu
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sakutahu"]
+      interval: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI: http://localhost:8025
+
+volumes:
+  pgdata:

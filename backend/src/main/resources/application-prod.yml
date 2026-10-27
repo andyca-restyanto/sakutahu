@@ -1,0 +1,55 @@
+# filepath: /backend/src/main/resources/application-prod.yml
+# Profile production. Aktifkan dengan SPRING_PROFILES_ACTIVE=prod.
+# TIDAK ADA nilai default untuk secret: aplikasi sengaja gagal start jika ada variabel yang lupa diisi.
+# Nilai dibaca dari environment variable server/hosting, atau dari backend/.env.production jika ada.
+spring:
+  config:
+    import: optional:file:.env.production[.properties]
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+  flyway:
+    clean-disabled: true
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
+
+app:
+  frontend-url: ${APP_FRONTEND_URL}
+  backend-url: ${APP_BACKEND_URL}
+  cors-allowed-origins: ${APP_CORS_ORIGINS}
+  mail-from: ${MAIL_FROM}
+  jwt:
+    secret: ${JWT_SECRET}
+  cookie:
+    # Wajib HTTPS di production
+    secure: true
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN}
+    bot-username: ${TELEGRAM_BOT_USERNAME}
+    webhook-secret: ${TELEGRAM_WEBHOOK_SECRET}
+  receipt:
+    # API key Claude untuk membaca struk (console.anthropic.com)
+    api-key: ${ANTHROPIC_API_KEY}
+
+logging:
+  level:
+    root: INFO
+    com.example.app: INFO

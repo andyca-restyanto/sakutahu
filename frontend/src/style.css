@@ -1,0 +1,43 @@
+/* filepath: /frontend/src/style.css */
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+
+  /* Krem tahu: latar & permukaan */
+  --color-krem-50: #fcfaf5;
+  --color-krem-100: #f7f2e8;
+  --color-krem-200: #ece3d0;
+  --color-krem-300: #dccfb4;
+
+  /* Daun: warna utama */
+  --color-daun-50: #eef6f1;
+  --color-daun-100: #d6eadf;
+  --color-daun-500: #3d8a64;
+  --color-daun-600: #2f6b4f;
+  --color-daun-700: #255640;
+  --color-daun-900: #15301f;
+
+  /* Kunyit: aksen hangat */
+  --color-kunyit-100: #fbecd0;
+  --color-kunyit-400: #f0b44c;
+  --color-kunyit-600: #b87412;
+
+  /* Arang: teks */
+  --color-arang-400: #9a968c;
+  --color-arang-600: #6b6860;
+  --color-arang-900: #2b2a26;
+}
+
+html,
+body {
+  background-color: var(--color-krem-100);
+  color: var(--color-arang-900);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-daun-500);
+  outline-offset: 2px;
+}

@@ -1,0 +1,74 @@
+# filepath: /docker-compose.prod.yml
+# Production: Caddy (HTTPS + frontend) → backend (Spring Boot) → PostgreSQL.
+#   1. cp .env.example .env                                   (domain & password DB)
+#   2. cp backend/.env.production.example backend/.env.production   (secret aplikasi)
+#   3. bash deploy/scripts/deploy.sh
+# Untuk development tetap pakai docker-compose.yml.
+name: sakutahu
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-sakutahu}
+      POSTGRES_USER: ${POSTGRES_USER:-sakutahu}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Isi POSTGRES_PASSWORD di file .env}
+      TZ: UTC
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # Tidak ada "ports": database hanya bisa diakses dari dalam jaringan Docker
+    logging: *logging
+
+  backend:
+    build: ./backend
+    image: sakutahu-backend:latest
+    restart: unless-stopped
+    env_file:
+      - backend/.env.production
+    environment:
+      # Koneksi DB diatur di sini (menimpa DB_* di backend/.env.production)
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sakutahu}
+      DB_USERNAME: ${POSTGRES_USER:-sakutahu}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:?Isi POSTGRES_PASSWORD di file .env}
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      postgres:
+        condition: service_healthy
+    logging: *logging
+
+  web:
+    build: ./frontend
+    image: sakutahu-web:latest
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?Isi DOMAIN di file .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Isi ACME_EMAIL di file .env}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"   # HTTP/3
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data        # sertifikat HTTPS, jangan dihapus
+      - caddy_config:/config
+    depends_on:
+      backend:
+        condition: service_healthy
+    logging: *logging
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

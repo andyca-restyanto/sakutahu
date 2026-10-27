@@ -1,0 +1,47 @@
+# filepath: /deploy/caddy/Caddyfile
+# Caddy = web server + reverse proxy + sertifikat HTTPS otomatis (Let's Encrypt).
+# DOMAIN & ACME_EMAIL diambil dari file .env di root repo (lihat .env.example).
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+	}
+
+	# API & webhook Telegram → backend. Hanya /api/* yang diteruskan (actuator tetap internal).
+	# Caddy mengganti X-Forwarded-For dari klien dengan IP asli, jadi rate limit tidak bisa dikelabui.
+	handle /api/* {
+		reverse_proxy backend:8080
+	}
+
+	# SPA Vue
+	handle {
+		root * /srv
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@pages not path /assets/*
+		header @pages Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}
+
+# Opsional: arahkan www ke domain utama. Aktifkan HANYA jika DNS www.<domain> juga mengarah ke server ini,
+# kalau tidak Caddy akan terus gagal membuat sertifikat untuk www.
+# www.{$DOMAIN} {
+# 	redir https://{$DOMAIN}{uri} permanent
+# }

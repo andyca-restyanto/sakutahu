@@ -1,0 +1,7 @@
+# filepath: /backend/.dockerignore
+target/
+.env
+.env.*
+!.env.*.example
+*.iml
+.idea/

@@ -1,0 +1,45 @@
+# filepath: /backend/src/main/resources/application-local.yml
+# Profile development (default). Nilai dibaca dari backend/.env.local jika ada,
+# selebihnya memakai default yang cocok dengan docker-compose.yml.
+spring:
+  config:
+    import: optional:file:.env.local[.properties]
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/sakutahu}
+    username: ${DB_USERNAME:sakutahu}
+    password: ${DB_PASSWORD:sakutahu}
+  # Default: Mailpit (docker-compose). Untuk Gmail isi MAIL_* di .env.local (lihat .env.local.example).
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
+      mail.smtp.starttls.required: ${MAIL_STARTTLS:false}
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
+app:
+  frontend-url: ${APP_FRONTEND_URL:http://localhost:5173}
+  backend-url: ${APP_BACKEND_URL:http://localhost:8080}
+  cors-allowed-origins: ${APP_CORS_ORIGINS:http://localhost:5173}
+  mail-from: ${MAIL_FROM:SakuTahu Dev <no-reply@sakutahu.local>}
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-32chars-min!!}
+  cookie:
+    # Cookie Secure tetap bisa dikirim lewat http://localhost
+    secure: ${COOKIE_SECURE:false}
+  telegram:
+    bot-token: ${TELEGRAM_BOT_TOKEN:}
+    bot-username: ${TELEGRAM_BOT_USERNAME:SakuTahuDevBot}
+    webhook-secret: ${TELEGRAM_WEBHOOK_SECRET:}
+  receipt:
+    # API key Claude untuk membaca struk (console.anthropic.com)
+    api-key: ${ANTHROPIC_API_KEY:}
+
+logging:
+  level:
+    com.example.app: DEBUG

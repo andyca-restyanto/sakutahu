@@ -1,0 +1,20 @@
+// filepath: /backend/src/main/java/com/example/app/shared/exception/ApiException.java
+package com.example.app.shared.exception;
+
+public class ApiException extends RuntimeException {
+
+    private final ErrorCode code;
+
+    public ApiException(ErrorCode code) {
+        this(code, code.defaultMessage());
+    }
+
+    public ApiException(ErrorCode code, String message) {
+        super(message);
+        this.code = code;
+    }
+
+    public ErrorCode getCode() {
+        return code;
+    }
+}
