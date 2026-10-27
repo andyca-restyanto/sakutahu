@@ -1,8 +1,10 @@
 # filepath: /docker-compose.prod.yml
-# Production: Caddy (HTTPS + frontend) → backend (Spring Boot) → PostgreSQL.
-#   1. cp .env.example .env                                   (domain & password DB)
+# Production: Caddy (HTTPS + frontend) → backend (Spring Boot) → PostgreSQL NATIVE di host VPS.
+#   1. cp .env.example .env                                         (domain & kredensial DB)
 #   2. cp backend/.env.production.example backend/.env.production   (secret aplikasi)
 #   3. bash deploy/scripts/deploy.sh
+# PostgreSQL TIDAK berjalan di Docker: di-install langsung di VPS (apt, repo resmi PGDG),
+# supaya bisa diakses dari luar dengan pembatasan IP lewat pg_hba.conf + UFW.
 # Untuk development tetap pakai docker-compose.yml.
 name: sakutahu
 
@@ -13,24 +15,6 @@ x-logging: &logging
     max-file: "5"
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sakutahu}
-      POSTGRES_USER: ${POSTGRES_USER:-sakutahu}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Isi POSTGRES_PASSWORD di file .env}
-      TZ: UTC
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-    # Tidak ada "ports": database hanya bisa diakses dari dalam jaringan Docker
-    logging: *logging
-
   backend:
     build: ./backend
     image: sakutahu-backend:latest
@@ -38,14 +22,15 @@ services:
     env_file:
       - backend/.env.production
     environment:
-      # Koneksi DB diatur di sini (menimpa DB_* di backend/.env.production)
-      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-sakutahu}
-      DB_USERNAME: ${POSTGRES_USER:-sakutahu}
+      # Koneksi DB diatur di sini (menimpa DB_* di backend/.env.production).
+      # host.docker.internal = IP host VPS dilihat dari dalam container.
+      DB_URL: jdbc:postgresql://host.docker.internal:5432/${POSTGRES_DB:-sakutahu}
+      DB_USERNAME: ${POSTGRES_USER:-sakutahu_app}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Isi POSTGRES_PASSWORD di file .env}
       SPRING_PROFILES_ACTIVE: prod
-    depends_on:
-      postgres:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Tidak ada "ports": backend hanya bisa diakses lewat Caddy
     logging: *logging
 
   web:
@@ -69,6 +54,12 @@ services:
     logging: *logging
 
 volumes:
-  pgdata:
   caddy_data:
   caddy_config:
+
+networks:
+  default:
+    ipam:
+      config:
+        # Subnet tetap: dipakai di pg_hba.conf & UFW agar hanya container ini yang boleh ke PostgreSQL host
+        - subnet: 172.28.0.0/16

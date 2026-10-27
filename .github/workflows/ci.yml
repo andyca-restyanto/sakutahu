@@ -1,5 +1,6 @@
 # filepath: /.github/workflows/ci.yml
-# Jalan setiap push/PR: test backend, type-check + build frontend, dan memastikan image Docker bisa di-build.
+# Jalan setiap push/PR: test backend, type-check + build frontend, memastikan image Docker bisa di-build,
+# lalu (hanya push ke main) deploy otomatis ke VPS via SSH.
 name: CI
 
 on:
@@ -12,7 +13,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Hanya PR yang dibatalkan saat ada push baru; run di main tidak boleh terpotong di tengah deploy
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   backend:
@@ -55,3 +57,25 @@ jobs:
         run: docker build -t sakutahu-backend:ci ./backend
       - name: Build image web
         run: docker build -t sakutahu-web:ci ./frontend
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [docker]
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy ke VPS via SSH (git pull → build → up → tunggu backend sehat)
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fingerprint: ${{ secrets.SSH_FINGERPRINT }}
+          command_timeout: 30m
+          script: |
+            set -e
+            cd /opt/sakutahu
+            bash deploy/scripts/deploy.sh

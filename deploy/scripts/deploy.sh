@@ -14,9 +14,11 @@ COMPOSE=(docker compose -f docker-compose.prod.yml)
 }
 chmod 600 .env backend/.env.production
 
-# Backup sebelum update (hanya jika database sudah pernah jalan)
-if [ -n "$("${COMPOSE[@]}" ps -q --status running postgres 2>/dev/null)" ]; then
+# Backup sebelum update (PostgreSQL native di host VPS)
+if command -v pg_isready >/dev/null && pg_isready -h 127.0.0.1 -q; then
   bash deploy/scripts/backup-db.sh
+else
+  echo "⚠️  PostgreSQL di host belum bisa dihubungi, backup dilewati."
 fi
 
 if [ "${SKIP_PULL:-0}" != "1" ]; then
