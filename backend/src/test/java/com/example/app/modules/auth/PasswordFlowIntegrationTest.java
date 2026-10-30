@@ -165,6 +165,9 @@ class PasswordFlowIntegrationTest extends PostgresIntegrationTest {
         mvc.perform(post("/api/v1/auth/refresh").cookie(cookieB))
                 .andExpect(jsonPath("$.code").value("TOKEN_EXPIRED"));
         mvc.perform(post("/api/v1/auth/refresh").cookie(newCookieA)).andExpect(status().isOk());
+        // Perangkat lama mencoba lagi → tetap ditolak, tapi TIDAK membuat perangkat ini ikut logout
+        mvc.perform(post("/api/v1/auth/refresh").cookie(cookieB))
+                .andExpect(jsonPath("$.code").value("TOKEN_EXPIRED"));
 
         String newAccess = json.readTree(changed.getResponse().getContentAsString()).get("accessToken").asText();
         mvc.perform(get("/api/v1/auth/me").header("Authorization", "Bearer " + newAccess)).andExpect(status().isOk());

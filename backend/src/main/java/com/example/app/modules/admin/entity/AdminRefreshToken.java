@@ -73,4 +73,5 @@ public class AdminRefreshToken {
 
     public UUID getId() { return id; }
     public UUID getAdminId() { return adminId; }
+    public UUID getReplacedBy() { return replacedBy; }
 }

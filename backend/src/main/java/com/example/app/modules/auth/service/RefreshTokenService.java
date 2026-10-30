@@ -73,8 +73,13 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new ApiException(ErrorCode.TOKEN_EXPIRED));
 
         if (current.isRevoked()) {
-            log.warn("Refresh token reuse terdeteksi untuk user {}, semua sesi dicabut", current.getUserId());
-            refreshTokenRepository.revokeAllActiveForUser(current.getUserId(), now);
+            // Hanya token yang sudah DIROTASI (punya pengganti) yang menandakan pencurian. Token yang dicabut karena
+            // logout / ganti password / reset password cukup ditolak; kalau ikut mencabut semua sesi, perangkat yang
+            // baru saja ganti password akan ikut logout saat perangkat lama mencoba refresh.
+            if (current.getReplacedBy() != null) {
+                log.warn("Refresh token reuse terdeteksi untuk user {}, semua sesi dicabut", current.getUserId());
+                refreshTokenRepository.revokeAllActiveForUser(current.getUserId(), now);
+            }
             throw new ApiException(ErrorCode.TOKEN_EXPIRED);
         }
         if (current.isExpired(now)) {

@@ -58,8 +58,11 @@ public class AdminSessionService {
         AdminRefreshToken current = tokenRepository.findByTokenHash(TokenUtils.sha256Hex(rawToken))
                 .orElseThrow(() -> new ApiException(ErrorCode.TOKEN_EXPIRED));
         if (current.isRevoked()) {
-            log.warn("Refresh token admin dipakai ulang untuk admin {}, semua sesi dicabut", current.getAdminId());
-            tokenRepository.revokeAllActive(current.getAdminId(), now);
+            // Sama seperti sesi user: hanya token hasil rotasi yang dipakai ulang yang dianggap pencurian
+            if (current.getReplacedBy() != null) {
+                log.warn("Refresh token admin dipakai ulang untuk admin {}, semua sesi dicabut", current.getAdminId());
+                tokenRepository.revokeAllActive(current.getAdminId(), now);
+            }
             throw new ApiException(ErrorCode.TOKEN_EXPIRED);
         }
         if (current.isExpired(now)) {
