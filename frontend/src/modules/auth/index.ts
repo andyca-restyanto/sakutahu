@@ -25,9 +25,32 @@ export const authRoutes: RouteRecordRaw[] = [
     meta: { title: 'Cek email' },
   },
   {
+    // Publik (bukan guestOnly) agar bisa dibuka juga dari halaman Akun saat lupa password saat ini
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('./views/ForgotPasswordView.vue'),
+    meta: { title: 'Lupa password' },
+  },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('./views/ResetPasswordView.vue'),
+    meta: { title: 'Buat password baru' },
+  },
+  {
     path: '/verify-email',
     name: 'verify-email',
     component: () => import('./views/VerifyEmailView.vue'),
     meta: { title: 'Verifikasi email' },
+  },
+]
+
+/** Halaman di dalam layout utama (wajib login). */
+export const accountRoutes: RouteRecordRaw[] = [
+  {
+    path: 'account',
+    name: 'account',
+    component: () => import('./views/AccountView.vue'),
+    meta: { requiresAuth: true, title: 'Akun' },
   },
 ]

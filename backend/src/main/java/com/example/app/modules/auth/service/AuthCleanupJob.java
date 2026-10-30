@@ -2,6 +2,7 @@
 package com.example.app.modules.auth.service;
 
 import com.example.app.modules.auth.repository.EmailVerificationTokenRepository;
+import com.example.app.modules.auth.repository.PasswordResetTokenRepository;
 import com.example.app.modules.auth.repository.RefreshTokenRepository;
 import com.example.app.modules.auth.repository.UserRepository;
 import com.example.app.shared.config.AppProperties;
@@ -24,17 +25,20 @@ public class AuthCleanupJob {
     private final EmailVerificationTokenRepository verificationTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final AppProperties props;
     private final Clock clock;
 
     public AuthCleanupJob(EmailVerificationTokenRepository verificationTokenRepository,
                           RefreshTokenRepository refreshTokenRepository,
                           UserRepository userRepository,
+                          PasswordResetTokenRepository passwordResetTokenRepository,
                           AppProperties props,
                           Clock clock) {
         this.verificationTokenRepository = verificationTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.userRepository = userRepository;
+        this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.props = props;
         this.clock = clock;
     }
@@ -46,9 +50,10 @@ public class AuthCleanupJob {
         int tokens = verificationTokenRepository.deleteStale(now);
         // Token yang dicabut disimpan 7 hari agar deteksi reuse tetap berfungsi
         int sessions = refreshTokenRepository.deleteStale(now, now.minus(Duration.ofDays(7)));
+        int resets = passwordResetTokenRepository.deleteStale(now);
         int users = userRepository.deleteUnverifiedCreatedBefore(
                 now.minus(props.verification().unverifiedAccountRetention()));
-        log.info("Auth cleanup: {} token verifikasi, {} refresh token, {} akun tidak terverifikasi dihapus",
-                tokens, sessions, users);
+        log.info("Auth cleanup: {} token verifikasi, {} refresh token, {} token reset password, "
+                + "{} akun tidak terverifikasi dihapus", tokens, sessions, resets, users);
     }
 }

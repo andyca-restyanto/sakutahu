@@ -1,6 +1,7 @@
 <!-- filepath: /frontend/src/modules/auth/components/LoginForm.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import BaseInput from '@/shared/components/BaseInput.vue'
@@ -86,7 +87,12 @@ const onSubmit = handleSubmit(async (values) => {
         autocomplete="current-password"
         :error="errors.password"
       />
-      <!-- TODO (fitur berikutnya): halaman lupa password -->
+      <RouterLink
+        :to="{ name: 'forgot-password', query: email ? { email } : {} }"
+        class="mt-2 inline-block text-sm font-semibold text-daun-700 underline-offset-2 hover:underline"
+      >
+        Lupa password?
+      </RouterLink>
     </div>
 
     <BaseButton type="submit" :loading="isSubmitting" block>Masuk</BaseButton>

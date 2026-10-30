@@ -29,6 +29,8 @@ const NO_REFRESH_PATHS = [
   '/auth/logout',
   '/auth/verify-email',
   '/auth/resend-verification',
+  '/auth/forgot-password',
+  '/auth/reset-password',
 ]
 
 http.interceptors.request.use((config) => {

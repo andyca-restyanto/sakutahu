@@ -10,6 +10,7 @@ const router = useRouter()
 
 const sessionExpired = route.query.expired === '1'
 const accountBlocked = route.query.blocked === '1'
+const passwordReset = route.query.reset === '1'
 
 function redirectTarget(): string {
   const redirect = route.query.redirect
@@ -28,6 +29,9 @@ function onLoggedIn(): void {
   <AuthLayout title="Selamat datang kembali" subtitle="Masuk untuk melihat catatan pengeluaranmu.">
     <FormAlert v-if="accountBlocked" class="mb-5">
       Akun kamu diblokir oleh admin SakuTahu. Hubungi admin jika menurutmu ini keliru.
+    </FormAlert>
+    <FormAlert v-else-if="passwordReset" variant="success" class="mb-5">
+      Password berhasil diganti. Silakan masuk dengan password baru.
     </FormAlert>
     <FormAlert v-else-if="sessionExpired" variant="info" class="mb-5">
       Sesi kamu telah berakhir. Silakan masuk kembali.

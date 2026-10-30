@@ -13,6 +13,8 @@ public enum ErrorCode {
     TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "Sesi telah berakhir, silakan login kembali"),
     VERIFICATION_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "Link verifikasi tidak valid"),
     VERIFICATION_TOKEN_EXPIRED(HttpStatus.GONE, "Link verifikasi sudah kedaluwarsa"),
+    RESET_TOKEN_INVALID(HttpStatus.BAD_REQUEST, "Link reset password tidak valid atau sudah dipakai"),
+    RESET_TOKEN_EXPIRED(HttpStatus.GONE, "Link reset password sudah kedaluwarsa"),
     CATEGORY_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "Kategori tidak sesuai dengan jenis transaksi"),
     TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Transaksi tidak ditemukan"),
     ACCOUNT_BLOCKED(HttpStatus.FORBIDDEN, "Akun kamu diblokir. Hubungi admin SakuTahu."),

@@ -47,6 +47,9 @@ app:
   cookie:
     refresh-cookie-name: refresh_token
     refresh-cookie-path: /api/v1/auth
+  password-reset:
+    # Link "lupa password" berlaku 15 menit
+    token-ttl: PT15M
   verification:
     token-ttl: PT24H
     unverified-account-retention: P7D

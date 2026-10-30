@@ -8,6 +8,7 @@ import type {
   LoginRequest,
   RegisterRequest,
   RegisterResponse,
+  UpdatePasswordRequest,
   UserResponse,
 } from '../types/auth.types'
 
@@ -37,6 +38,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function login(payload: LoginRequest): Promise<void> {
     setSession(await authService.login(payload))
+  }
+
+  /** Perangkat ini tetap login dengan sesi baru dari server. */
+  async function changePassword(payload: UpdatePasswordRequest): Promise<void> {
+    setSession(await authService.changePassword(payload))
   }
 
   async function verifyEmail(token: string): Promise<void> {
@@ -87,6 +93,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     login,
     verifyEmail,
+    changePassword,
     refresh,
     restoreSession,
     logout,

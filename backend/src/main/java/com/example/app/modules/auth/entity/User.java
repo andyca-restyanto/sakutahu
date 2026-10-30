@@ -120,6 +120,12 @@ public class User {
         }
     }
 
+    /** Password baru juga membuka kunci akun akibat salah password. */
+    public void changePassword(String newHash) {
+        this.passwordHash = newHash;
+        resetFailedLogins();
+    }
+
     public boolean isBlocked() {
         return blockedAt != null;
     }

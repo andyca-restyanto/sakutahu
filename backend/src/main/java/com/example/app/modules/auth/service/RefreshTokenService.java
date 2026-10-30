@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.UUID;
 
 /** Membuat sesi (access + refresh token), rotasi, dan pencabutan. */
 @Service
@@ -110,6 +111,12 @@ public class RefreshTokenService {
                     t.revoke(clock.instant(), null);
                     refreshTokenRepository.save(t);
                 });
+    }
+
+    /** Mencabut semua sesi user (dipakai saat ganti/reset password). */
+    @Transactional
+    public void revokeAll(UUID userId) {
+        refreshTokenRepository.revokeAllActiveForUser(userId, clock.instant());
     }
 
     private RefreshToken newToken(User user, String raw, ClientContext ctx) {

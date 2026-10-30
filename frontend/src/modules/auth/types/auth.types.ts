@@ -56,6 +56,34 @@ export interface UserResponse {
   createdAt: string
 }
 
+/** ForgotPasswordRequest.java */
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+/** ResetPasswordInspectRequest.java */
+export interface ResetPasswordInspectRequest {
+  token: string
+}
+
+/** ResetPasswordInfoResponse.java */
+export interface ResetPasswordInfoResponse {
+  maskedEmail: string
+  expiresAt: string
+}
+
+/** ResetPasswordRequest.java */
+export interface ResetPasswordRequest {
+  token: string
+  newPassword: string
+}
+
+/** UpdatePasswordRequest.java (ganti password saat login) */
+export interface UpdatePasswordRequest {
+  currentPassword: string
+  newPassword: string
+}
+
 /** AuthResponse.java */
 export interface AuthResponse {
   accessToken: string

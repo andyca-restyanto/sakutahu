@@ -66,7 +66,18 @@ async function logout(): Promise<void> {
           >
             ⭐ VIP
           </span>
-          <span class="hidden text-sm text-arang-600 lg:inline">{{ auth.user?.fullName }}</span>
+          <RouterLink
+            :to="{ name: 'account' }"
+            class="flex items-center gap-2 rounded-lg px-2 py-2 text-sm font-semibold text-arang-600 hover:bg-krem-200 hover:text-arang-900"
+            active-class="bg-white text-daun-700! shadow-sm"
+            aria-label="Akun"
+          >
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" stroke-linecap="round" />
+            </svg>
+            <span class="hidden max-w-[10rem] truncate lg:inline">{{ auth.user?.fullName }}</span>
+          </RouterLink>
           <button
             type="button"
             class="rounded-lg px-3 py-2 text-sm font-semibold text-arang-600 hover:bg-krem-200 hover:text-arang-900 disabled:opacity-50"

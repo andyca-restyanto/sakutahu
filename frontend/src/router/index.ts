@@ -1,6 +1,6 @@
 // filepath: /frontend/src/router/index.ts
 import { createRouter, createWebHistory } from 'vue-router'
-import { authRoutes, useAuthStore } from '@/modules/auth'
+import { accountRoutes, authRoutes, useAuthStore } from '@/modules/auth'
 import { telegramRoutes } from '@/modules/telegram'
 import { dashboardRoutes } from '@/modules/dashboard'
 import { transactionRoutes } from '@/modules/transaction'
@@ -19,7 +19,7 @@ export const router = createRouter({
       component: () => import('@/layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
       redirect: { name: 'dashboard' },
-      children: [...dashboardRoutes, ...transactionRoutes],
+      children: [...dashboardRoutes, ...transactionRoutes, ...accountRoutes],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'dashboard' } },
   ],

@@ -2,15 +2,22 @@
 package com.example.app.modules.auth.controller;
 
 import com.example.app.modules.auth.dto.AuthResponse;
+import com.example.app.modules.auth.dto.ForgotPasswordRequest;
 import com.example.app.modules.auth.dto.LoginRequest;
 import com.example.app.modules.auth.dto.MessageResponse;
 import com.example.app.modules.auth.dto.RegisterRequest;
 import com.example.app.modules.auth.dto.RegisterResponse;
 import com.example.app.modules.auth.dto.ResendVerificationRequest;
+import com.example.app.modules.auth.dto.ResetPasswordInfoResponse;
+import com.example.app.modules.auth.dto.ResetPasswordInspectRequest;
+import com.example.app.modules.auth.dto.ResetPasswordRequest;
+import com.example.app.modules.auth.dto.UpdatePasswordRequest;
 import com.example.app.modules.auth.dto.UserResponse;
 import com.example.app.modules.auth.dto.VerifyEmailRequest;
 import com.example.app.modules.auth.service.AuthResult;
 import com.example.app.modules.auth.service.AuthService;
+import com.example.app.modules.auth.service.PasswordChangeService;
+import com.example.app.modules.auth.service.PasswordResetService;
 import com.example.app.shared.security.UserPrincipal;
 import com.example.app.shared.util.ClientContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,10 +38,15 @@ public class AuthController {
 
     private final AuthService authService;
     private final RefreshCookieFactory cookies;
+    private final PasswordResetService passwordResetService;
+    private final PasswordChangeService passwordChangeService;
 
-    public AuthController(AuthService authService, RefreshCookieFactory cookies) {
+    public AuthController(AuthService authService, RefreshCookieFactory cookies,
+                          PasswordResetService passwordResetService, PasswordChangeService passwordChangeService) {
         this.authService = authService;
         this.cookies = cookies;
+        this.passwordResetService = passwordResetService;
+        this.passwordChangeService = passwordChangeService;
     }
 
     @PostMapping("/register")
@@ -77,6 +89,31 @@ public class AuthController {
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal UserPrincipal principal) {
         return authService.me(principal.id());
+    }
+
+    /** Selalu 200 dengan pesan yang sama, terdaftar atau tidak. */
+    @PostMapping("/forgot-password")
+    public MessageResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, HttpServletRequest http) {
+        return passwordResetService.requestReset(request.email(), ClientContext.from(http));
+    }
+
+    @PostMapping("/reset-password/inspect")
+    public ResetPasswordInfoResponse inspectReset(@Valid @RequestBody ResetPasswordInspectRequest request,
+                                                  HttpServletRequest http) {
+        return passwordResetService.inspect(request.token(), ClientContext.from(http));
+    }
+
+    /** Tidak login otomatis: user diarahkan ke halaman login dengan password baru. */
+    @PostMapping("/reset-password")
+    public MessageResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request, HttpServletRequest http) {
+        return passwordResetService.reset(request.token(), request.newPassword(), ClientContext.from(http));
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<AuthResponse> changePassword(@AuthenticationPrincipal UserPrincipal principal,
+                                                       @Valid @RequestBody UpdatePasswordRequest request,
+                                                       HttpServletRequest http) {
+        return withCookie(passwordChangeService.change(principal.id(), request, ClientContext.from(http)));
     }
 
     private ResponseEntity<AuthResponse> withCookie(AuthResult result) {
