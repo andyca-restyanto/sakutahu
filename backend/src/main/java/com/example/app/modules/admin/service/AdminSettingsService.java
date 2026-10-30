@@ -99,13 +99,14 @@ public class AdminSettingsService {
             String freeUser = "NOT (u.plan = 'VIP' AND (u.plan_expires_at IS NULL OR u.plan_expires_at > :now))";
             Integer n = quota <= 0
                     ? jdbc.queryForObject("SELECT COUNT(*) FROM users u WHERE " + freeUser, params, Integer.class)
-                    : jdbc.queryForObject("""
-                            SELECT COUNT(*) FROM (
-                                SELECT r.user_id FROM receipt_scans r JOIN users u ON u.id = r.user_id
-                                WHERE r.created_at >= :from AND r.status <> 'FAILED' AND """ + freeUser + """
-                                GROUP BY r.user_id HAVING COUNT(*) >= :quota
-                            ) x
-                            """, params, Integer.class);
+                    // Disusun dengan String.join: spasi di akhir baris text block dibuang Java,
+                    // sehingga "AND " + freeUser sempat menjadi "ANDNOT (...)"
+                    : jdbc.queryForObject(String.join("\n",
+                            "SELECT COUNT(*) FROM (",
+                            "  SELECT r.user_id FROM receipt_scans r JOIN users u ON u.id = r.user_id",
+                            "  WHERE r.created_at >= :from AND r.status <> 'FAILED' AND " + freeUser,
+                            "  GROUP BY r.user_id HAVING COUNT(*) >= :quota",
+                            ") x"), params, Integer.class);
             usersAtQuota = n == null ? 0 : n;
         }
         return new ReceiptScanUsage(firstDay.toString().substring(0, 7),
