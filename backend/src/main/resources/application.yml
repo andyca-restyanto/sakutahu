@@ -55,6 +55,19 @@ app:
     lock-duration: PT15M
   telegram:
     link-token-ttl: PT10M
+  admin:
+    access-token-ttl: PT10M
+    refresh-token-ttl: PT8H
+    refresh-cookie-name: admin_refresh_token
+    refresh-cookie-path: /api/v1/admin/auth
+    invitation-ttl: P2D
+    max-failed-logins: 5
+    lock-duration: PT15M
+    bootstrap:
+      email: ${ADMIN_BOOTSTRAP_EMAIL:andyca.restyanto03@gmail.com}
+      full-name: ${ADMIN_BOOTSTRAP_NAME:Owner SakuTahu}
+      # Password awal OWNER (wajib diganti saat login pertama). Kosong = tidak membuat OWNER.
+      password: ${ADMIN_BOOTSTRAP_PASSWORD:}
   receipt:
     provider: claude
     model: ${RECEIPT_AI_MODEL:claude-haiku-5-5}

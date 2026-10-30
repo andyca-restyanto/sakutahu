@@ -41,23 +41,36 @@ public class MailService {
         ctx.setVariable("fullName", fullName);
         ctx.setVariable("verifyLink", verifyLink);
         ctx.setVariable("validHours", validFor.toHours());
-        String html = templateEngine.process("mail/verify-email", ctx);
+        send(to, "Verifikasi email akun SakuTahu kamu", "mail/verify-email", ctx, "verifikasi");
+    }
 
+    /** Undangan admin baru (lihat AdminInvitationEmailListener). */
+    public void sendAdminInvitation(String to, String fullName, String inviterName, String inviteLink, Duration validFor) {
+        Context ctx = new Context();
+        ctx.setVariable("fullName", fullName);
+        ctx.setVariable("inviterName", inviterName);
+        ctx.setVariable("inviteLink", inviteLink);
+        ctx.setVariable("validHours", validFor.toHours());
+        send(to, "Undangan menjadi admin SakuTahu", "mail/admin-invitation", ctx, "undangan admin");
+    }
+
+    private void send(String to, String subject, String template, Context ctx, String kind) {
+        String html = templateEngine.process(template, ctx);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, false, StandardCharsets.UTF_8.name());
             helper.setFrom(parseFrom(props.mailFrom()));
             helper.setTo(to);
-            helper.setSubject("Verifikasi email akun SakuTahu kamu");
+            helper.setSubject(subject);
             helper.setText(html, true);
             mailSender.send(message);
-            log.info("Email verifikasi terkirim ke {}", maskEmail(to));
+            log.info("Email {} terkirim ke {}", kind, maskEmail(to));
         } catch (MailAuthenticationException e) {
             log.error("Login SMTP ditolak saat mengirim ke {}. Untuk Gmail: pastikan MAIL_USERNAME adalah alamat Gmail "
                     + "lengkap, MAIL_PASSWORD adalah App Password 16 karakter (bukan password akun), dan "
                     + "verifikasi 2 langkah aktif.", maskEmail(to), e);
         } catch (MessagingException | MailException | UnsupportedEncodingException e) {
-            log.error("Gagal mengirim email verifikasi ke {}", maskEmail(to), e);
+            log.error("Gagal mengirim email {} ke {}", kind, maskEmail(to), e);
         }
     }
 

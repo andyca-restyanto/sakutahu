@@ -79,3 +79,24 @@ export function formatRange(from: string, to: string): string {
   if (fy === ty) return `${fd} ${month(fm)} – ${td} ${month(tm)} ${ty}`
   return `${fd} ${month(fm)} ${fy} – ${td} ${month(tm)} ${ty}`
 }
+
+/** Instant ISO-8601 (mis. createdAt) → "30 Okt 2026, 13.32" di zona waktu tertentu (default Asia/Jakarta). */
+export function formatDateTime(isoInstant: string | null | undefined, timeZone = 'Asia/Jakarta'): string {
+  if (!isoInstant) return '–'
+  return new Intl.DateTimeFormat('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone,
+  }).format(new Date(isoInstant))
+}
+
+/** Instant ISO-8601 → "30 Okt 2026" di zona waktu tertentu (default Asia/Jakarta). */
+export function formatInstantDate(isoInstant: string | null | undefined, timeZone = 'Asia/Jakarta'): string {
+  if (!isoInstant) return '–'
+  return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric', timeZone }).format(
+    new Date(isoInstant),
+  )
+}

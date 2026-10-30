@@ -54,7 +54,16 @@ public class AppSettingsService {
         }).orElse(defaultValue);
     }
 
-    /** Untuk test: paksa baca ulang dari database. */
+    /** Simpan (insert/update) lalu langsung berlaku di instance ini. */
+    public void set(String key, String value) {
+        jdbc.update("""
+                INSERT INTO app_settings (key, value, updated_at) VALUES (?, ?, now())
+                ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()
+                """, key, value);
+        invalidate();
+    }
+
+    /** Paksa baca ulang dari database (setelah perubahan; juga dipakai test). */
     public void invalidate() {
         loadedAt = Instant.EPOCH;
     }

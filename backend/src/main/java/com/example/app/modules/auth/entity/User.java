@@ -59,6 +59,16 @@ public class User {
     @Column(name = "plan_expires_at")
     private Instant planExpiresAt;
 
+    /** Diisi admin saat memblokir; null = akun aktif. */
+    @Column(name = "blocked_at")
+    private Instant blockedAt;
+
+    @Column(name = "blocked_reason", length = 255)
+    private String blockedReason;
+
+    @Column(name = "blocked_by")
+    private UUID blockedBy;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -110,6 +120,28 @@ public class User {
         }
     }
 
+    public boolean isBlocked() {
+        return blockedAt != null;
+    }
+
+    /** Diubah oleh admin. FREE selalu tanpa tanggal kedaluwarsa. */
+    public void changePlan(UserPlan newPlan, Instant expiresAt) {
+        this.plan = newPlan;
+        this.planExpiresAt = newPlan == UserPlan.VIP ? expiresAt : null;
+    }
+
+    public void block(String reason, UUID adminId, Instant now) {
+        this.blockedAt = now;
+        this.blockedReason = reason;
+        this.blockedBy = adminId;
+    }
+
+    public void unblock() {
+        this.blockedAt = null;
+        this.blockedReason = null;
+        this.blockedBy = null;
+    }
+
     public void resetFailedLogins() {
         failedLoginCount = 0;
         lockedUntil = null;
@@ -126,6 +158,9 @@ public class User {
     public Instant getEmailVerifiedAt() { return emailVerifiedAt; }
     public UserPlan getPlan() { return plan; }
     public Instant getPlanExpiresAt() { return planExpiresAt; }
+    public Instant getBlockedAt() { return blockedAt; }
+    public String getBlockedReason() { return blockedReason; }
+    public UUID getBlockedBy() { return blockedBy; }
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -49,6 +49,9 @@ public class RefreshTokenService {
 
     @Transactional
     public AuthResult issue(User user, ClientContext ctx) {
+        if (user.isBlocked()) {
+            throw new ApiException(ErrorCode.ACCOUNT_BLOCKED);
+        }
         String raw = TokenUtils.randomToken();
         RefreshToken token = newToken(user, raw, ctx);
         refreshTokenRepository.save(token);
@@ -81,6 +84,10 @@ public class RefreshTokenService {
                 .orElseThrow(() -> new ApiException(ErrorCode.TOKEN_EXPIRED));
         if (user.isLocked(now)) {
             throw new ApiException(ErrorCode.ACCOUNT_LOCKED);
+        }
+        if (user.isBlocked()) {
+            refreshTokenRepository.revokeAllActiveForUser(user.getId(), now);
+            throw new ApiException(ErrorCode.ACCOUNT_BLOCKED);
         }
 
         String raw = TokenUtils.randomToken();

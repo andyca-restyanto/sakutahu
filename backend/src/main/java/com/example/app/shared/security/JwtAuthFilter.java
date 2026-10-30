@@ -20,11 +20,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     /** Penanda untuk entry point: token ada tapi tidak valid/kedaluwarsa. */
     public static final String INVALID_TOKEN_ATTR = "sakutahu.invalidToken";
+    /** Penanda untuk entry point: token valid tapi akun diblokir admin. */
+    public static final String BLOCKED_ATTR = "sakutahu.blocked";
 
     private final JwtService jwtService;
+    private final BlockedUserChecker blockedUserChecker;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, BlockedUserChecker blockedUserChecker) {
         this.jwtService = jwtService;
+        this.blockedUserChecker = blockedUserChecker;
     }
 
     @Override
@@ -35,6 +39,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String token = header.substring(7);
             try {
                 UserPrincipal principal = jwtService.parse(token);
+                if (blockedUserChecker.isBlocked(principal.id())) {
+                    request.setAttribute(BLOCKED_ATTR, Boolean.TRUE);
+                    SecurityContextHolder.clearContext();
+                    chain.doFilter(request, response);
+                    return;
+                }
                 var auth = new UsernamePasswordAuthenticationToken(principal, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(auth);
             } catch (JwtException | IllegalArgumentException ex) {

@@ -6,6 +6,8 @@ declare module 'vue-router' {
     requiresAuth?: boolean
     guestOnly?: boolean
     title?: string
+    /** Panel admin: 'guest' (halaman login), 'public', 'auth' (wajib login admin), 'owner' (wajib OWNER). */
+    admin?: 'guest' | 'public' | 'auth' | 'owner'
   }
 }
 

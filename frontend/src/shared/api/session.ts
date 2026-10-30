@@ -5,7 +5,9 @@
  * sehingga shared/http tidak perlu bergantung pada modul mana pun.
  */
 type RefreshHandler = () => Promise<string | null>
-type ExpiredHandler = () => void
+/** 'expired' = sesi habis; 'blocked' = akun diblokir admin. */
+export type SessionEndReason = 'expired' | 'blocked'
+type ExpiredHandler = (reason: SessionEndReason) => void
 
 let accessToken: string | null = null
 let refreshHandler: RefreshHandler | null = null
@@ -23,8 +25,8 @@ export const session = {
     expiredHandler = handler
   },
   refresh: (): Promise<string | null> => (refreshHandler ? refreshHandler() : Promise.resolve(null)),
-  expire: (): void => {
+  expire: (reason: SessionEndReason = 'expired'): void => {
     accessToken = null
-    expiredHandler?.()
+    expiredHandler?.(reason)
   },
 }

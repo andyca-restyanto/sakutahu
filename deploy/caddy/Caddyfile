@@ -3,6 +3,7 @@
 # DOMAIN & ACME_EMAIL diambil dari file .env di root repo (lihat .env.example).
 {
 	email {$ACME_EMAIL}
+	acme_ca https://acme-v02.api.letsencrypt.org/directory
 }
 
 {$DOMAIN} {

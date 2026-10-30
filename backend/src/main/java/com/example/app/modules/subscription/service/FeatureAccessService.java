@@ -79,7 +79,7 @@ public class FeatureAccessService {
         return new ReceiptScanAccess(available, mode, available ? null : FeatureDenyReason.QUOTA_EXCEEDED, freeQuota, used);
     }
 
-    FeatureAccessMode accessMode() {
+    public FeatureAccessMode accessMode() {
         String raw = settings.getString(RECEIPT_ACCESS_KEY, FeatureAccessMode.VIP_ONLY.name());
         try {
             return FeatureAccessMode.valueOf(raw.toUpperCase(Locale.ROOT));
@@ -88,7 +88,7 @@ public class FeatureAccessService {
         }
     }
 
-    int freeQuota() {
+    public int freeQuota() {
         return Math.max(0, settings.getInt(RECEIPT_FREE_QUOTA_KEY, DEFAULT_FREE_QUOTA));
     }
 
@@ -96,7 +96,7 @@ public class FeatureAccessService {
      * Struk yang dipakai bulan ini (bulan kalender menurut zona waktu user).
      * Scan FAILED (kesalahan sistem / foto tidak terbaca) tidak memotong kuota.
      */
-    int usedThisMonth(User user) {
+    public int usedThisMonth(User user) {
         ZoneId zone = ZoneId.of(user.getTimezone());
         LocalDate firstDay = LocalDate.now(clock.withZone(zone)).withDayOfMonth(1);
         Instant from = firstDay.atStartOfDay(zone).toInstant();

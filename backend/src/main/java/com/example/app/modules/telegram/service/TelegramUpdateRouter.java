@@ -6,6 +6,7 @@ import com.example.app.modules.telegram.dto.TelegramUpdate;
 import com.example.app.modules.telegram.dto.TelegramWebhookReply;
 import com.example.app.modules.telegram.entity.TelegramAccount;
 import com.example.app.modules.telegram.repository.TelegramAccountRepository;
+import com.example.app.shared.security.BlockedUserChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -25,23 +26,27 @@ public class TelegramUpdateRouter {
 
     private static final Logger log = LoggerFactory.getLogger(TelegramUpdateRouter.class);
     static final String ERROR_TEXT = "Maaf, terjadi kesalahan saat memproses pesanmu. Coba lagi sebentar lagi ya.";
+    static final String BLOCKED_TEXT = "🚫 Akun SakuTahu kamu sedang diblokir, jadi pesan ini tidak dicatat. Hubungi admin SakuTahu.";
 
     private final TelegramLinkService linkService;
     private final TelegramRecordingService recordingService;
     private final TelegramAccountRepository accountRepository;
     private final TelegramBotClient botClient;
     private final ReceiptScanService receiptScanService;
+    private final BlockedUserChecker blockedUserChecker;
 
     public TelegramUpdateRouter(TelegramLinkService linkService,
                                 TelegramRecordingService recordingService,
                                 TelegramAccountRepository accountRepository,
                                 TelegramBotClient botClient,
-                                ReceiptScanService receiptScanService) {
+                                ReceiptScanService receiptScanService,
+                                BlockedUserChecker blockedUserChecker) {
         this.linkService = linkService;
         this.recordingService = recordingService;
         this.accountRepository = accountRepository;
         this.botClient = botClient;
         this.receiptScanService = receiptScanService;
+        this.blockedUserChecker = blockedUserChecker;
     }
 
     public Optional<TelegramWebhookReply> route(TelegramUpdate update) {
@@ -62,6 +67,9 @@ public class TelegramUpdateRouter {
 
         if (isStart || account.isEmpty() || !isPrivate) {
             return linkService.handleUpdate(update);
+        }
+        if (blockedUserChecker.isBlocked(account.get().getUserId())) {
+            return Optional.of(TelegramWebhookReply.sendMessage(msg.chat().id(), BLOCKED_TEXT));
         }
         try {
             var userId = account.get().getUserId();
@@ -89,6 +97,10 @@ public class TelegramUpdateRouter {
         Optional<TelegramAccount> account = accountRepository.findByTelegramUserId(cq.from().id());
         if (account.isEmpty()) {
             botClient.answerCallbackQuery(cq.id(), "Akun Telegram ini belum terhubung ke SakuTahu");
+            return Optional.empty();
+        }
+        if (blockedUserChecker.isBlocked(account.get().getUserId())) {
+            botClient.answerCallbackQuery(cq.id(), "Akun SakuTahu kamu sedang diblokir");
             return Optional.empty();
         }
         botClient.answerCallbackQuery(cq.id(), null);

@@ -16,7 +16,6 @@ spring:
     password: ${MAIL_PASSWORD:}
     properties:
       mail.smtp.auth: ${MAIL_SMTP_AUTH:false}
-      mail.smtp.ssl.enable: ${MAIL_SSL:false}
       mail.smtp.starttls.enable: ${MAIL_STARTTLS:false}
       mail.smtp.starttls.required: ${MAIL_STARTTLS:false}
       mail.smtp.connectiontimeout: 10000
@@ -30,6 +29,9 @@ app:
   mail-from: ${MAIL_FROM:SakuTahu Dev <no-reply@sakutahu.local>}
   jwt:
     secret: ${JWT_SECRET:dev-only-secret-change-me-please-32chars-min!!}
+  admin:
+    # Wajib BERBEDA dari JWT_SECRET
+    jwt-secret: ${ADMIN_JWT_SECRET:dev-only-ADMIN-secret-change-me-32chars-min!!}
   cookie:
     # Cookie Secure tetap bisa dikirim lewat http://localhost
     secure: ${COOKIE_SECURE:false}

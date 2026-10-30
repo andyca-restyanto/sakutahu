@@ -58,6 +58,12 @@ http.interceptors.response.use(
     const status = error.response?.status
     const isAuthPath = NO_REFRESH_PATHS.some((p) => config?.url?.startsWith(p))
 
+    // Akun diblokir admin saat sedang login → keluarkan dengan pesan khusus
+    if (status === 403 && error.response?.data?.code === 'ACCOUNT_BLOCKED' && !isAuthPath) {
+      session.expire('blocked')
+      throw error
+    }
+
     if (status !== 401 || !config || config._retry || isAuthPath) {
       throw error
     }

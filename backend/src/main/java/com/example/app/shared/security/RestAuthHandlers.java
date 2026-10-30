@@ -24,6 +24,10 @@ public class RestAuthHandlers {
 
     public AuthenticationEntryPoint entryPoint() {
         return (request, response, ex) -> {
+            if (Boolean.TRUE.equals(request.getAttribute(JwtAuthFilter.BLOCKED_ATTR))) {
+                write(response, ErrorCode.ACCOUNT_BLOCKED);
+                return;
+            }
             boolean invalidToken = Boolean.TRUE.equals(request.getAttribute(JwtAuthFilter.INVALID_TOKEN_ATTR));
             write(response, invalidToken ? ErrorCode.TOKEN_EXPIRED : ErrorCode.UNAUTHORIZED);
         };
@@ -33,7 +37,7 @@ public class RestAuthHandlers {
         return (request, response, ex) -> write(response, ErrorCode.FORBIDDEN);
     }
 
-    private void write(HttpServletResponse response, ErrorCode code) throws IOException {
+    public void write(HttpServletResponse response, ErrorCode code) throws IOException {
         response.setStatus(code.status().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

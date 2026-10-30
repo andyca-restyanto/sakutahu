@@ -150,6 +150,11 @@ public class AuthServiceImpl implements AuthService {
         user.resetFailedLogins();
         userRepository.save(user);
 
+        // Sama seperti verifikasi: hanya diberitahu ke pihak yang tahu password
+        if (user.isBlocked()) {
+            throw new ApiException(ErrorCode.ACCOUNT_BLOCKED);
+        }
+
         // Dicek setelah password benar agar status verifikasi tidak bocor ke pihak yang tidak tahu password
         if (!user.isEmailVerified()) {
             throw new ApiException(ErrorCode.EMAIL_NOT_VERIFIED);

@@ -20,14 +20,8 @@ spring:
     password: ${MAIL_PASSWORD}
     properties:
       mail.smtp.auth: true
-      # Pilih SATU mode enkripsi (koneksi plaintext tidak didukung di production):
-      #   Port 465 → MAIL_SSL=true,  MAIL_STARTTLS=false  (SSL/TLS langsung, mis. smtp.sumopod.com)
-      #   Port 587 → MAIL_SSL=false, MAIL_STARTTLS=true   (STARTTLS, mis. smtp.gmail.com) ← default
-      mail.smtp.ssl.enable: ${MAIL_SSL:false}
-      mail.smtp.starttls.enable: ${MAIL_STARTTLS:true}
-      mail.smtp.starttls.required: ${MAIL_STARTTLS:true}
-      # Tolak sertifikat yang nama host-nya tidak cocok (cegah man-in-the-middle)
-      mail.smtp.ssl.checkserveridentity: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
       mail.smtp.connectiontimeout: 10000
       mail.smtp.timeout: 10000
       mail.smtp.writetimeout: 10000
@@ -44,6 +38,9 @@ app:
   mail-from: ${MAIL_FROM}
   jwt:
     secret: ${JWT_SECRET}
+  admin:
+    # Wajib diisi & BERBEDA dari JWT_SECRET
+    jwt-secret: ${ADMIN_JWT_SECRET}
   cookie:
     # Wajib HTTPS di production
     secure: true

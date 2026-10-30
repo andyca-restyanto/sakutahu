@@ -38,6 +38,8 @@ public abstract class PostgresIntegrationTest {
         // Dipatok agar test tidak terpengaruh isi backend/.env.local developer
         registry.add("app.telegram.bot-username", () -> "SakuTahuBot");
         registry.add("app.frontend-url", () -> "http://localhost:5173");
+        // OWNER tidak dibuat otomatis saat test (test membuat admin sendiri)
+        registry.add("app.admin.bootstrap.password", () -> "");
     }
 
     private static EmbeddedPostgres start() {
