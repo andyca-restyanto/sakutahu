@@ -18,7 +18,9 @@ const loggingOut = ref(false)
 const nav = [
   { to: { name: 'dashboard' }, label: 'Dashboard', icon: 'M3 13h8V3H3v10Zm10 8h8V11h-8v10ZM3 21h8v-6H3v6Zm10-18v6h8V3h-8Z' },
   { to: { name: 'transactions' }, label: 'Transaksi', icon: 'M4 6h16M4 12h16M4 18h10' },
+  { to: { name: 'reports' }, label: 'Laporan', icon: 'M7 3h7l5 5v13H7V3Zm7 0v5h5M10 13h6M10 17h6M10 9h2' },
 ] as const
+const accountIcon = 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-8 9a8 8 0 0 1 16 0'
 
 async function logout(): Promise<void> {
   loggingOut.value = true
@@ -99,16 +101,18 @@ async function logout(): Promise<void> {
       class="fixed inset-x-0 bottom-0 z-30 border-t border-krem-200 bg-white/95 backdrop-blur sm:hidden"
       aria-label="Navigasi utama"
     >
-      <div class="mx-auto grid max-w-md grid-cols-3 items-center px-4 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+      <div class="mx-auto grid max-w-md grid-cols-5 items-center px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         <RouterLink
-          :to="nav[0].to"
+          v-for="item in nav.slice(0, 2)"
+          :key="item.label"
+          :to="item.to"
           class="flex flex-col items-center gap-0.5 py-1 text-xs font-semibold text-arang-400"
           active-class="text-daun-700!"
         >
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path :d="nav[0].icon" stroke-linejoin="round" />
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path :d="item.icon" />
           </svg>
-          {{ nav[0].label }}
+          {{ item.label }}
         </RouterLink>
         <button
           type="button"
@@ -119,14 +123,24 @@ async function logout(): Promise<void> {
           +
         </button>
         <RouterLink
-          :to="nav[1].to"
+          :to="nav[2].to"
           class="flex flex-col items-center gap-0.5 py-1 text-xs font-semibold text-arang-400"
           active-class="text-daun-700!"
         >
-          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-            <path :d="nav[1].icon" stroke-linecap="round" />
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path :d="nav[2].icon" />
           </svg>
-          {{ nav[1].label }}
+          {{ nav[2].label }}
+        </RouterLink>
+        <RouterLink
+          :to="{ name: 'account' }"
+          class="flex flex-col items-center gap-0.5 py-1 text-xs font-semibold text-arang-400"
+          active-class="text-daun-700!"
+        >
+          <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path :d="accountIcon" />
+          </svg>
+          Akun
         </RouterLink>
       </div>
     </nav>

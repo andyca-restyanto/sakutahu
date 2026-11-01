@@ -45,6 +45,12 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <dependency>
+            <!-- Export laporan jurnal ke Excel (.xlsx), mode streaming SXSSF -->
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.4.1</version>
+        </dependency>
+        <dependency>
             <!-- Hanya /actuator/health untuk healthcheck container (tidak diekspos ke internet oleh Caddy) -->
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>

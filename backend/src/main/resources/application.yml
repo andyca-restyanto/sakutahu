@@ -24,6 +24,10 @@ spring:
     locations: classpath:db/migration
   thymeleaf:
     check-template-location: false
+  mvc:
+    async:
+      # Unduh Excel memakai response streaming (async); beri waktu cukup untuk laporan besar
+      request-timeout: 120s
 
 management:
   endpoints:

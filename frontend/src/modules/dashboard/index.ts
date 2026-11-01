@@ -3,6 +3,9 @@ import type { RouteRecordRaw } from 'vue-router'
 
 export { dashboardService } from './services/dashboard.service'
 export type * from './types/dashboard.types'
+export type { PeriodPreset } from './types/period.types'
+// Dipakai ulang oleh modul lain (mis. Laporan) agar pilihan periode konsisten
+export { default as PeriodFilter } from './components/PeriodFilter.vue'
 
 /** Dipasang sebagai child dari layout utama (lihat /frontend/src/router/index.ts). */
 export const dashboardRoutes: RouteRecordRaw[] = [

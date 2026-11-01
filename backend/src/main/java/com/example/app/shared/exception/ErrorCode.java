@@ -17,6 +17,8 @@ public enum ErrorCode {
     RESET_TOKEN_EXPIRED(HttpStatus.GONE, "Link reset password sudah kedaluwarsa"),
     CATEGORY_TYPE_MISMATCH(HttpStatus.BAD_REQUEST, "Kategori tidak sesuai dengan jenis transaksi"),
     TRANSACTION_NOT_FOUND(HttpStatus.NOT_FOUND, "Transaksi tidak ditemukan"),
+    REPORT_RANGE_INVALID(HttpStatus.BAD_REQUEST, "Periode laporan tidak valid"),
+    REPORT_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "Data terlalu banyak untuk diunduh, persempit periodenya"),
     ACCOUNT_BLOCKED(HttpStatus.FORBIDDEN, "Akun kamu diblokir. Hubungi admin SakuTahu."),
     ACCOUNT_DISABLED(HttpStatus.FORBIDDEN, "Akun admin ini dinonaktifkan"),
     PASSWORD_CHANGE_REQUIRED(HttpStatus.FORBIDDEN, "Ganti password terlebih dahulu"),

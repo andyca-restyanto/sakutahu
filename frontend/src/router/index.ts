@@ -4,6 +4,7 @@ import { accountRoutes, authRoutes, useAuthStore } from '@/modules/auth'
 import { telegramRoutes } from '@/modules/telegram'
 import { dashboardRoutes } from '@/modules/dashboard'
 import { transactionRoutes } from '@/modules/transaction'
+import { reportRoutes } from '@/modules/report'
 import { adminGuard, adminRoutes } from '@/modules/admin'
 
 export const router = createRouter({
@@ -19,7 +20,7 @@ export const router = createRouter({
       component: () => import('@/layouts/MainLayout.vue'),
       meta: { requiresAuth: true },
       redirect: { name: 'dashboard' },
-      children: [...dashboardRoutes, ...transactionRoutes, ...accountRoutes],
+      children: [...dashboardRoutes, ...transactionRoutes, ...reportRoutes, ...accountRoutes],
     },
     { path: '/:pathMatch(.*)*', redirect: { name: 'dashboard' } },
   ],
