@@ -43,6 +43,9 @@ public class SecurityConfig {
             "/api/v1/admin/auth/login",
             "/api/v1/admin/auth/refresh",
             "/api/v1/admin/auth/logout",
+            "/api/v1/admin/auth/forgot-password",
+            "/api/v1/admin/auth/reset-password/inspect",
+            "/api/v1/admin/auth/reset-password",
             "/api/v1/admin/invitations/inspect",
             "/api/v1/admin/invitations/accept"
     };

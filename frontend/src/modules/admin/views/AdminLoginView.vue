@@ -1,7 +1,7 @@
 <!-- filepath: /frontend/src/modules/admin/views/AdminLoginView.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { useForm } from 'vee-validate'
 import { toTypedSchema } from '@vee-validate/zod'
 import BaseInput from '@/shared/components/BaseInput.vue'
@@ -18,6 +18,7 @@ const router = useRouter()
 const admin = useAdminAuthStore()
 
 const sessionExpired = route.query.expired === '1'
+const passwordReset = route.query.reset === '1'
 const { handleSubmit, errors, defineField, setErrors, isSubmitting } = useForm({
   validationSchema: toTypedSchema(adminLoginSchema),
 })
@@ -54,7 +55,10 @@ const onSubmit = handleSubmit(async (values) => {
 <template>
   <AdminAuthCard title="Masuk panel admin" subtitle="Khusus admin SakuTahu. Akun user biasa tidak bisa dipakai di sini.">
     <form class="flex flex-col gap-5" novalidate @submit="onSubmit">
-      <FormAlert v-if="sessionExpired && !formError" variant="info">Sesi admin berakhir. Silakan masuk kembali.</FormAlert>
+      <FormAlert v-if="passwordReset && !formError" variant="success">
+        Password admin berhasil diganti. Silakan masuk dengan password baru.
+      </FormAlert>
+      <FormAlert v-else-if="sessionExpired && !formError" variant="info">Sesi admin berakhir. Silakan masuk kembali.</FormAlert>
       <FormAlert v-if="formError">{{ formError }}</FormAlert>
       <BaseInput
         v-model="email"
@@ -65,13 +69,21 @@ const onSubmit = handleSubmit(async (values) => {
         autocomplete="username"
         :error="errors.email"
       />
-      <PasswordInput
-        v-model="password"
-        v-bind="passwordAttrs"
-        label="Password"
-        autocomplete="current-password"
-        :error="errors.password"
-      />
+      <div>
+        <PasswordInput
+          v-model="password"
+          v-bind="passwordAttrs"
+          label="Password"
+          autocomplete="current-password"
+          :error="errors.password"
+        />
+        <RouterLink
+          :to="{ name: 'admin-forgot-password', query: email ? { email } : {} }"
+          class="mt-2 inline-block text-sm font-semibold text-daun-700 underline-offset-2 hover:underline"
+        >
+          Lupa password?
+        </RouterLink>
+      </div>
       <BaseButton type="submit" :loading="isSubmitting" block>Masuk</BaseButton>
     </form>
   </AdminAuthCard>

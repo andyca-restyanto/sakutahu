@@ -68,6 +68,8 @@ app:
     refresh-cookie-name: admin_refresh_token
     refresh-cookie-path: /api/v1/admin/auth
     invitation-ttl: P2D
+    # Link "lupa password" admin berlaku 15 menit
+    password-reset-ttl: PT15M
     max-failed-logins: 5
     lock-duration: PT15M
     bootstrap:

@@ -119,6 +119,13 @@ public class AdminUser {
         mustChangePassword = false;
     }
 
+    /** Lewat link lupa password: password baru dibuat sendiri dan kunci salah-password dibuka. */
+    public void resetPassword(String newHash) {
+        changePassword(newHash);
+        failedLoginCount = 0;
+        lockedUntil = null;
+    }
+
     public void changeStatus(AdminStatus newStatus) {
         status = newStatus;
     }

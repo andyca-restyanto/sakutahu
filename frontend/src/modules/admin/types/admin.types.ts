@@ -87,6 +87,28 @@ export interface UpdateAdminStatusRequest {
   status: AdminStatus
 }
 
+/** AdminForgotPasswordRequest.java */
+export interface AdminForgotPasswordRequest {
+  email: string
+}
+
+/** AdminResetPasswordInspectRequest.java */
+export interface AdminResetPasswordInspectRequest {
+  token: string
+}
+
+/** AdminResetPasswordInfoResponse.java */
+export interface AdminResetPasswordInfoResponse {
+  maskedEmail: string
+  expiresAt: string
+}
+
+/** AdminResetPasswordRequest.java */
+export interface AdminResetPasswordRequest {
+  token: string
+  newPassword: string
+}
+
 /** AdminUserSummaryResponse.java — plan = plan efektif */
 export interface AdminUserSummaryResponse {
   id: string

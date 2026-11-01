@@ -73,6 +73,27 @@ public class MailService {
         send(to, "Password SakuTahu kamu telah diubah", "mail/password-changed", ctx, "password diubah");
     }
 
+    /** Link lupa password admin. sentByOwnerName != null jika dikirim OWNER dari menu Admin. */
+    public void sendAdminPasswordReset(String to, String fullName, String resetLink, Duration validFor,
+                                       String sentByOwnerName) {
+        Context ctx = new Context();
+        ctx.setVariable("fullName", fullName);
+        ctx.setVariable("resetLink", resetLink);
+        ctx.setVariable("validMinutes", validFor.toMinutes());
+        ctx.setVariable("ownerName", sentByOwnerName);
+        send(to, "Atur ulang password admin SakuTahu", "mail/admin-reset-password", ctx, "reset password admin");
+    }
+
+    /** Pemberitahuan ke admin yang bersangkutan setelah password admin di-reset. */
+    public void sendAdminPasswordChanged(String to, String fullName, String changedAt, String forgotLink) {
+        Context ctx = new Context();
+        ctx.setVariable("fullName", fullName);
+        ctx.setVariable("changedAt", changedAt);
+        ctx.setVariable("forgotLink", forgotLink);
+        send(to, "Password admin SakuTahu kamu telah diubah", "mail/admin-password-changed", ctx,
+                "password admin diubah");
+    }
+
     private void send(String to, String subject, String template, Context ctx, String kind) {
         String html = templateEngine.process(template, ctx);
         try {

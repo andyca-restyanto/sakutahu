@@ -2,11 +2,17 @@
 package com.example.app.modules.admin.controller;
 
 import com.example.app.modules.admin.dto.AdminAuthResponse;
+import com.example.app.modules.admin.dto.AdminForgotPasswordRequest;
+import com.example.app.modules.admin.dto.AdminResetPasswordInfoResponse;
+import com.example.app.modules.admin.dto.AdminResetPasswordInspectRequest;
+import com.example.app.modules.admin.dto.AdminResetPasswordRequest;
 import com.example.app.modules.admin.dto.AdminLoginRequest;
 import com.example.app.modules.admin.dto.AdminResponse;
 import com.example.app.modules.admin.dto.ChangePasswordRequest;
 import com.example.app.modules.admin.service.AdminAuthResult;
 import com.example.app.modules.admin.service.AdminAuthService;
+import com.example.app.modules.admin.service.AdminPasswordResetService;
+import com.example.app.modules.auth.dto.MessageResponse;
 import com.example.app.shared.security.AdminPrincipal;
 import com.example.app.shared.util.ClientContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,10 +32,13 @@ public class AdminAuthController {
 
     private final AdminAuthService authService;
     private final AdminRefreshCookieFactory cookies;
+    private final AdminPasswordResetService passwordResetService;
 
-    public AdminAuthController(AdminAuthService authService, AdminRefreshCookieFactory cookies) {
+    public AdminAuthController(AdminAuthService authService, AdminRefreshCookieFactory cookies,
+                               AdminPasswordResetService passwordResetService) {
         this.authService = authService;
         this.cookies = cookies;
+        this.passwordResetService = passwordResetService;
     }
 
     @PostMapping("/login")
@@ -59,6 +68,26 @@ public class AdminAuthController {
                                                             @Valid @RequestBody ChangePasswordRequest request,
                                                             HttpServletRequest http) {
         return withCookie(authService.changePassword(admin.id(), request, ClientContext.from(http)));
+    }
+
+    /** Selalu 200 dengan pesan yang sama, terdaftar atau tidak. */
+    @PostMapping("/forgot-password")
+    public MessageResponse forgotPassword(@Valid @RequestBody AdminForgotPasswordRequest request,
+                                          HttpServletRequest http) {
+        return passwordResetService.requestReset(request.email(), ClientContext.from(http));
+    }
+
+    @PostMapping("/reset-password/inspect")
+    public AdminResetPasswordInfoResponse inspectReset(@Valid @RequestBody AdminResetPasswordInspectRequest request,
+                                                       HttpServletRequest http) {
+        return passwordResetService.inspect(request.token(), ClientContext.from(http));
+    }
+
+    /** Tidak login otomatis: admin diarahkan ke /admin/login dengan password baru. */
+    @PostMapping("/reset-password")
+    public MessageResponse resetPassword(@Valid @RequestBody AdminResetPasswordRequest request,
+                                         HttpServletRequest http) {
+        return passwordResetService.reset(request.token(), request.newPassword(), ClientContext.from(http));
     }
 
     private ResponseEntity<AdminAuthResponse> withCookie(AdminAuthResult result) {

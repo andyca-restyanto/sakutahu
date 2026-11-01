@@ -7,6 +7,8 @@ import com.example.app.modules.admin.dto.InviteAdminRequest;
 import com.example.app.modules.admin.dto.UpdateAdminStatusRequest;
 import com.example.app.modules.admin.service.AdminAccountService;
 import com.example.app.modules.admin.service.AdminInvitationService;
+import com.example.app.modules.admin.service.AdminPasswordResetService;
+import com.example.app.modules.auth.dto.MessageResponse;
 import com.example.app.shared.security.AdminPrincipal;
 import com.example.app.shared.util.ClientContext;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,10 +35,20 @@ public class AdminAccountController {
 
     private final AdminAccountService accountService;
     private final AdminInvitationService invitationService;
+    private final AdminPasswordResetService passwordResetService;
 
-    public AdminAccountController(AdminAccountService accountService, AdminInvitationService invitationService) {
+    public AdminAccountController(AdminAccountService accountService, AdminInvitationService invitationService,
+                                  AdminPasswordResetService passwordResetService) {
         this.accountService = accountService;
         this.invitationService = invitationService;
+        this.passwordResetService = passwordResetService;
+    }
+
+    /** OWNER mengirim link reset ke email admin tersebut; OWNER tidak pernah melihat password. */
+    @PostMapping("/{id}/password-reset")
+    public MessageResponse sendPasswordReset(@AuthenticationPrincipal AdminPrincipal owner, @PathVariable UUID id,
+                                             HttpServletRequest http) {
+        return passwordResetService.sendByOwner(owner.id(), id, ClientContext.from(http));
     }
 
     @GetMapping

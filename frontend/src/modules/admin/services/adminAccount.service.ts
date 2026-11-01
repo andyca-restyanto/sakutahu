@@ -1,4 +1,5 @@
 // filepath: /frontend/src/modules/admin/services/adminAccount.service.ts
+import type { MessageResponse } from '@/modules/auth'
 import { adminHttp } from './adminHttp'
 import type {
   AdminInvitationResponse,
@@ -16,6 +17,12 @@ export const adminAccountService = {
 
   async changeStatus(id: string, payload: UpdateAdminStatusRequest): Promise<AdminResponse> {
     const { data } = await adminHttp.patch<AdminResponse>(`/admins/${id}/status`, payload)
+    return data
+  },
+
+  /** Link reset dikirim ke email admin tersebut (bukan ke OWNER). */
+  async sendPasswordReset(id: string): Promise<MessageResponse> {
+    const { data } = await adminHttp.post<MessageResponse>(`/admins/${id}/password-reset`)
     return data
   },
 

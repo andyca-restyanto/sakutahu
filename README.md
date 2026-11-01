@@ -231,7 +231,7 @@ Setelah akun tertaut, kirim pesan ke bot:
 
 ## Paket VIP & akses fitur
 
-Sementara diatur manual lewat SQL (belum ada halaman admin). Perubahan `app_settings` berlaku maksimal 60 detik kemudian (cache).
+Diatur lewat **panel admin** (`/admin` → menu User & Kuota Struk). SQL di bawah tetap bisa dipakai sebagai cadangan. Perubahan `app_settings` berlaku maksimal 60 detik kemudian (cache).
 
 ```sql
 -- Jadikan user VIP (tanpa batas waktu)
@@ -264,6 +264,100 @@ GROUP BY u.email ORDER BY terpakai DESC;
 
 Web menampilkan badge **⭐ VIP** di header dan status kuota di panduan Telegram (`GET /api/v1/me/features`).
 
+## Panel admin (`/admin`)
+
+Panel terpisah untuk admin: **User** (lihat, ubah plan, blokir), **Kuota Struk**, dan **Admin** (khusus OWNER).
+Akun admin disimpan di tabel `admin_users`, **terpisah dari user** SakuTahu: login, password, token JWT (secret
+`ADMIN_JWT_SECRET` + audience `sakutahu-admin`), dan cookie refresh (`admin_refresh_token`, path `/api/v1/admin/auth`)
+semuanya berbeda. Token user tidak bisa membuka API admin, begitu juga sebaliknya.
+
+### OWNER pertama
+
+Tidak ada form pendaftaran admin publik. OWNER dibuat otomatis saat backend start **hanya jika belum ada admin**:
+
+```properties
+# backend/.env.local atau backend/.env.production
+ADMIN_BOOTSTRAP_EMAIL=andyca.restyanto03@gmail.com
+ADMIN_BOOTSTRAP_PASSWORD=<password awal, min 12 karakter>
+```
+
+1. Restart backend → log: `OWNER admin dibuat untuk an***@gmail.com`.
+2. Buka `/admin/login`, masuk dengan password awal → otomatis diarahkan ke **Ganti password awal**.
+3. Setelah berhasil, hapus `ADMIN_BOOTSTRAP_PASSWORD` dari file env (tidak dipakai lagi).
+
+### Lupa password admin / OWNER
+
+- Di `/admin/login` → **Lupa password?** → masukkan email admin. Balasan selalu sama (tidak membocorkan siapa adminnya).
+- Link `/admin/reset-password?token=…` berlaku **15 menit**, sekali pakai; permintaan baru membatalkan link lama.
+  Dibatasi 1×/menit & 3×/jam per email, 10×/jam per IP. Admin `DISABLED` tidak dikirimi email.
+- Setelah reset: semua sesi admin dicabut, kunci salah-password dibuka, `mustChangePassword` dimatikan,
+  lalu masuk ulang di `/admin/login`. Email pemberitahuan dikirim **ke admin yang bersangkutan saja**.
+- OWNER bisa menekan **Kirim link reset** di menu Admin untuk admin lain: link dikirim ke email admin tersebut,
+  OWNER tidak pernah melihat password-nya. Untuk akun OWNER sendiri, pakai "Lupa password?" di halaman login.
+- Token reset admin terpisah dari token reset user (`admin_password_reset_tokens`, migrasi V10). Semua permintaan &
+  reset tercatat di `admin_audit_logs`.
+- Karena siapa pun yang menguasai email OWNER bisa me-reset password panel, **aktifkan verifikasi 2 langkah** di email OWNER.
+
+Cadangan darurat (mis. email OWNER tidak bisa diakses): kosongkan tabel admin lewat SQL, isi lagi env bootstrap,
+lalu restart backend. Admin lain perlu diundang ulang; audit log tetap tersimpan (kolom `admin_id` menjadi NULL).
+```sql
+DELETE FROM admin_users;
+```
+
+### Peran
+
+| | OWNER (hanya satu) | ADMIN |
+|---|---|---|
+| Menu User (lihat, ubah plan, blokir) | ✅ | ✅ |
+| Menu Kuota Struk | ✅ | ✅ |
+| Menu Admin (undang, nonaktifkan admin) | ✅ | ❌ |
+
+- Admin baru diundang lewat **email** (link berlaku 2 hari, sekali pakai). Penerima membuat password sendiri di `/admin/accept-invite`.
+- Password admin minimal 12 karakter (huruf + angka). 5× salah → akun terkunci 15 menit.
+- Sesi admin: access token 10 menit, refresh 8 jam. Admin yang dinonaktifkan langsung kehilangan akses.
+- Semua perubahan (plan, blokir, kuota, undangan, status admin, ganti password) dicatat di `admin_audit_logs`.
+
+### Blokir user
+
+User yang diblokir: semua sesi web dicabut, tidak bisa login (`ACCOUNT_BLOCKED`), request API dengan token lama
+ditolak (maks. 30 detik pada instance lain), dan bot Telegram membalas "akun diblokir" tanpa mencatat.
+Data transaksinya tetap tersimpan dan kembali bisa dipakai setelah blokir dibuka.
+
+```sql
+-- Riwayat aksi admin terbaru
+SELECT l.created_at, a.email AS admin, l.action, l.target_type, l.target_id, l.detail
+FROM admin_audit_logs l LEFT JOIN admin_users a ON a.id = l.admin_id
+ORDER BY l.created_at DESC LIMIT 50;
+```
+
+## Lupa & ganti password (user)
+
+- **Lupa password** (`/forgot-password`): user memasukkan email → balasan selalu sama, terdaftar atau tidak.
+  Jika terdaftar (dan tidak diblokir), email berisi link `/reset-password?token=…` yang **berlaku 15 menit** dan
+  sekali pakai; permintaan baru membatalkan link lama. Dibatasi 1×/menit & 5×/jam per email, 20×/jam per IP.
+- **Reset berhasil**: password diganti, **semua perangkat logout**, kunci salah-password dibuka, email ditandai
+  terverifikasi, lalu user diarahkan ke halaman login untuk masuk ulang (tidak login otomatis).
+- **Ganti password** (halaman **Akun** `/account`, klik nama/ikon di header): wajib password saat ini, password baru
+  harus berbeda. Perangkat ini tetap login dengan sesi baru; **perangkat lain otomatis logout**.
+- Setiap password berubah (reset maupun ganti), user menerima email pemberitahuan berisi waktu perubahan dan link
+  lupa password jika bukan dia yang mengubah.
+
+## Laporan jurnal (buku kas) & unduh Excel
+
+Menu **Laporan** (`/reports`) menampilkan semua transaksi periode dalam format buku kas:
+Tanggal · Keterangan · Kategori · Masuk · Keluar · Saldo.
+
+- **Saldo awal** = akumulasi bersih semua transaksi sebelum periode; **saldo berjalan** dihitung database
+  (window function, urut tanggal → waktu dicatat) dengan rumus pemasukan − pengeluaran − tabungan, sama seperti dashboard.
+- Tabungan & Investasi masuk kolom **Keluar**, totalnya tetap ditampilkan terpisah.
+- Filter periode (maks. 24 bulan), jenis, dan kategori tersimpan di URL. Jika jenis/kategori difilter,
+  **kolom saldo disembunyikan** (saldo dari sebagian transaksi menyesatkan) dan hanya total yang ditampilkan.
+- **Unduh Excel** (semua user): file `sakutahu-jurnal-<from>_<to>.xlsx` dibuat di backend (Apache POI streaming) berisi
+  sheet **Jurnal** (kop, saldo awal, baris transaksi, total) dan **Ringkasan** (total + rekap per kategori dengan porsi).
+  Angka berupa number (format `#,##0`), tanggal berupa tanggal Excel, header dibekukan + autofilter.
+  Catatan yang diawali `= + - @` disimpan sebagai teks (aman dari formula injection).
+  Dibatasi 10 unduhan / 10 menit per user dan 50.000 transaksi per file.
+
 ## Kontrak API (`/api/v1`)
 
 | Method | Endpoint | Auth | Response |
@@ -275,16 +369,37 @@ Web menampilkan badge **⭐ VIP** di header dan status kuota di panduan Telegram
 | POST | `/auth/refresh` | cookie | 200 `AuthResponse` + cookie baru |
 | POST | `/auth/logout` | cookie | 204 |
 | GET | `/auth/me` | Bearer | 200 `UserResponse` (termasuk `plan`) |
+| POST | `/auth/forgot-password` | – | 200 `MessageResponse` (selalu sama) |
+| POST | `/auth/reset-password/inspect` | – (token) | 200 `ResetPasswordInfoResponse` |
+| POST | `/auth/reset-password` | – (token) | 200 `MessageResponse` |
+| POST | `/auth/change-password` | Bearer | 200 `AuthResponse` + cookie baru |
 | GET | `/me/features` | Bearer | 200 `FeatureAccessResponse` |
 | GET | `/categories?type=` | Bearer | 200 `CategoryResponse[]` |
 | POST | `/transactions` | Bearer | 201 `TransactionResponse` |
 | GET | `/transactions?type=&categoryId=&from=&to=&page=&size=` | Bearer | 200 `PageResponse<TransactionResponse>` |
 | GET / PUT / DELETE | `/transactions/{id}` | Bearer | 200 / 200 / 204 |
 | GET | `/dashboard?from=&to=` | Bearer | 200 `DashboardResponse` |
+| GET | `/reports/journal?from=&to=&type=&categoryId=&page=&size=` | Bearer | 200 `JournalReportResponse` |
+| GET | `/reports/journal/export?from=&to=&type=&categoryId=` | Bearer | 200 file `.xlsx` |
 | POST | `/telegram/link-token` | Bearer | 200 `TelegramLinkResponse` |
 | GET | `/telegram/status` | Bearer | 200 `TelegramStatusResponse` |
 | DELETE | `/telegram/link` | Bearer | 204 |
 | POST | `/telegram/webhook` | secret header | 200 |
+| POST | `/admin/auth/login` · `/admin/auth/refresh` · `/admin/auth/logout` | – / cookie admin | `AdminAuthResponse` / 204 |
+| GET | `/admin/auth/me` | Bearer admin | `AdminResponse` |
+| POST | `/admin/auth/change-password` | Bearer admin | `AdminAuthResponse` + cookie baru |
+| POST | `/admin/auth/forgot-password` · `/admin/auth/reset-password/inspect` · `/admin/auth/reset-password` | – | `MessageResponse` / `AdminResetPasswordInfoResponse` |
+| POST | `/admin/admins/{id}/password-reset` | Bearer OWNER | `MessageResponse` |
+| POST | `/admin/invitations/inspect` · `/admin/invitations/accept` | – (token undangan) | `InvitationInfoResponse` / `AdminAuthResponse` |
+| GET | `/admin/users?q=&plan=&status=&page=&size=` | Bearer admin | `PageResponse<AdminUserSummaryResponse>` |
+| GET | `/admin/users/{id}` | Bearer admin | `AdminUserDetailResponse` |
+| PUT | `/admin/users/{id}/plan` | Bearer admin | `AdminUserDetailResponse` |
+| POST | `/admin/users/{id}/block` · `/admin/users/{id}/unblock` | Bearer admin | `AdminUserDetailResponse` |
+| GET / PUT | `/admin/settings/receipt-scan` | Bearer admin | `ReceiptScanSettingsResponse` |
+| GET | `/admin/admins` | Bearer OWNER | `AdminResponse[]` |
+| PATCH | `/admin/admins/{id}/status` | Bearer OWNER | `AdminResponse` |
+| GET / POST | `/admin/admins/invitations` | Bearer OWNER | `AdminInvitationResponse[]` / 201 |
+| POST / DELETE | `/admin/admins/invitations/{id}/resend` · `/admin/admins/invitations/{id}` | Bearer OWNER | 200 / 204 |
 
 DTO di `backend/.../modules/<modul>/dto` identik dengan `frontend/src/modules/<modul>/types`.
 Kode error identik antara `ErrorCode.java` dan `shared/api/errors.ts`.
@@ -306,3 +421,4 @@ Kode error identik antara `ErrorCode.java` dan `shared/api/errors.ts`.
 - Di profile `prod`, cookie refresh selalu `Secure` (wajib HTTPS).
 - `ANTHROPIC_API_KEY` hanya dari env, tidak pernah di-log. Foto struk dikirim ke Anthropic API untuk dibaca lalu dibuang; tidak disimpan di server.
 - Baca struk dibatasi 10 foto per 10 menit per user (selain kuota bulanan), supaya biaya API tidak bocor.
+- Panel admin: secret JWT terpisah (`ADMIN_JWT_SECRET`, wajib beda dari `JWT_SECRET`, dicek saat start), status admin dicek ke database di setiap request, dan halaman `/admin` diberi `noindex`. Akses bisa dibatasi per IP di `deploy/caddy/Caddyfile`.

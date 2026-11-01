@@ -1,9 +1,12 @@
 // filepath: /frontend/src/modules/admin/services/adminAuth.service.ts
+import type { MessageResponse } from '@/modules/auth'
 import { adminHttp, adminRawHttp } from './adminHttp'
 import type {
   AcceptInvitationRequest,
   AdminAuthResponse,
   AdminLoginRequest,
+  AdminResetPasswordInfoResponse,
+  AdminResetPasswordRequest,
   AdminResponse,
   ChangePasswordRequest,
   InvitationInfoResponse,
@@ -26,6 +29,22 @@ export const adminAuthService = {
 
   async changePassword(payload: ChangePasswordRequest): Promise<AdminAuthResponse> {
     const { data } = await adminHttp.post<AdminAuthResponse>('/auth/change-password', payload)
+    return data
+  },
+
+  /** Selalu berhasil dengan pesan yang sama, terdaftar atau tidak. */
+  async forgotPassword(email: string): Promise<MessageResponse> {
+    const { data } = await adminRawHttp.post<MessageResponse>('/auth/forgot-password', { email })
+    return data
+  },
+
+  async inspectReset(token: string): Promise<AdminResetPasswordInfoResponse> {
+    const { data } = await adminRawHttp.post<AdminResetPasswordInfoResponse>('/auth/reset-password/inspect', { token })
+    return data
+  },
+
+  async resetPassword(payload: AdminResetPasswordRequest): Promise<MessageResponse> {
+    const { data } = await adminRawHttp.post<MessageResponse>('/auth/reset-password', payload)
     return data
   },
 

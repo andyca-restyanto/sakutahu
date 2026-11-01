@@ -40,6 +40,15 @@ export const acceptInvitationSchema = z
   })
   .refine((v) => v.password === v.confirmPassword, { message: 'Password tidak sama', path: ['confirmPassword'] })
 
+export const adminForgotSchema = z.object({ email })
+
+export const adminResetSchema = z
+  .object({
+    newPassword: adminPassword,
+    confirmPassword: z.string({ required_error: 'Ulangi password baru' }).min(1, 'Ulangi password baru'),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, { message: 'Password tidak sama', path: ['confirmPassword'] })
+
 export const inviteAdminSchema = z.object({
   fullName: z.string({ required_error: 'Nama wajib diisi' }).trim().min(1, 'Nama wajib diisi').max(100, 'Nama maksimal 100 karakter'),
   email,
@@ -48,4 +57,5 @@ export const inviteAdminSchema = z.object({
 export type AdminLoginForm = z.infer<typeof adminLoginSchema>
 export type ChangePasswordForm = z.infer<typeof changePasswordSchema>
 export type AcceptInvitationForm = z.infer<typeof acceptInvitationSchema>
+export type AdminResetForm = z.infer<typeof adminResetSchema>
 export type InviteAdminForm = z.infer<typeof inviteAdminSchema>

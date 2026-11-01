@@ -23,6 +23,18 @@ export const adminRoutes: RouteRecordRaw[] = [
     meta: { admin: 'public', title: 'Admin · Terima undangan' },
   },
   {
+    path: '/admin/forgot-password',
+    name: 'admin-forgot-password',
+    component: () => import('./views/AdminForgotPasswordView.vue'),
+    meta: { admin: 'public', title: 'Admin · Lupa password' },
+  },
+  {
+    path: '/admin/reset-password',
+    name: 'admin-reset-password',
+    component: () => import('./views/AdminResetPasswordView.vue'),
+    meta: { admin: 'public', title: 'Admin · Buat password baru' },
+  },
+  {
     path: '/admin/change-password',
     name: 'admin-change-password',
     component: () => import('./views/AdminChangePasswordView.vue'),

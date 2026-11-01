@@ -23,6 +23,7 @@ const statusTarget = ref<AdminResponse | null>(null)
 const revokeTarget = ref<AdminInvitationResponse | null>(null)
 const busy = ref(false)
 const resendingId = ref<string | null>(null)
+const resetTarget = ref<AdminResponse | null>(null)
 
 async function load(): Promise<void> {
   loading.value = true
@@ -61,6 +62,22 @@ async function confirmStatus(): Promise<void> {
   } finally {
     busy.value = false
     statusTarget.value = null
+  }
+}
+
+/** Link reset dikirim ke email admin tersebut; OWNER tidak pernah melihat password-nya. */
+async function confirmSendReset(): Promise<void> {
+  const target = resetTarget.value
+  if (!target) return
+  busy.value = true
+  error.value = null
+  try {
+    notice.value = (await adminAccountService.sendPasswordReset(target.id)).message
+  } catch (e) {
+    error.value = toApiError(e).message
+  } finally {
+    busy.value = false
+    resetTarget.value = null
   }
 }
 
@@ -128,9 +145,12 @@ async function confirmRevoke(): Promise<void> {
             Login terakhir: {{ a.lastLoginAt ? `${formatDateTime(a.lastLoginAt)} WIB` : 'belum pernah' }}
           </p>
         </div>
-        <BaseButton v-if="a.role !== 'OWNER'" variant="secondary" @click="statusTarget = a">
-          {{ a.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan' }}
-        </BaseButton>
+        <div v-if="a.role !== 'OWNER'" class="flex flex-wrap gap-2">
+          <BaseButton v-if="a.status === 'ACTIVE'" variant="ghost" @click="resetTarget = a">Kirim link reset</BaseButton>
+          <BaseButton variant="secondary" @click="statusTarget = a">
+            {{ a.status === 'ACTIVE' ? 'Nonaktifkan' : 'Aktifkan' }}
+          </BaseButton>
+        </div>
       </li>
     </ul>
   </section>
@@ -170,6 +190,15 @@ async function confirmRevoke(): Promise<void> {
     :loading="busy"
     @confirm="confirmStatus"
     @cancel="statusTarget = null"
+  />
+  <ConfirmDialog
+    :open="!!resetTarget"
+    title="Kirim link reset password?"
+    :message="`Link untuk membuat password baru (berlaku 15 menit) dikirim ke email ${resetTarget?.email ?? ''}. Password lamanya tetap berlaku sampai link dipakai.`"
+    confirm-label="Kirim link"
+    :loading="busy"
+    @confirm="confirmSendReset"
+    @cancel="resetTarget = null"
   />
   <ConfirmDialog
     :open="!!revokeTarget"

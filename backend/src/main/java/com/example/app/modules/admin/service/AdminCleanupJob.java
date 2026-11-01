@@ -2,6 +2,7 @@
 package com.example.app.modules.admin.service;
 
 import com.example.app.modules.admin.repository.AdminInvitationRepository;
+import com.example.app.modules.admin.repository.AdminPasswordResetTokenRepository;
 import com.example.app.modules.admin.repository.AdminRefreshTokenRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +22,14 @@ public class AdminCleanupJob {
 
     private final AdminRefreshTokenRepository tokenRepository;
     private final AdminInvitationRepository invitationRepository;
+    private final AdminPasswordResetTokenRepository resetTokenRepository;
     private final Clock clock;
 
     public AdminCleanupJob(AdminRefreshTokenRepository tokenRepository, AdminInvitationRepository invitationRepository,
-                           Clock clock) {
+                           AdminPasswordResetTokenRepository resetTokenRepository, Clock clock) {
         this.tokenRepository = tokenRepository;
         this.invitationRepository = invitationRepository;
+        this.resetTokenRepository = resetTokenRepository;
         this.clock = clock;
     }
 
@@ -36,6 +39,8 @@ public class AdminCleanupJob {
         Instant now = clock.instant();
         int tokens = tokenRepository.deleteStale(now, now.minus(Duration.ofDays(7)));
         int invitations = invitationRepository.deleteExpiredBefore(now.minus(Duration.ofDays(30)));
-        log.info("Admin cleanup: {} refresh token, {} undangan dihapus", tokens, invitations);
+        int resets = resetTokenRepository.deleteStale(now);
+        log.info("Admin cleanup: {} refresh token, {} undangan, {} token reset password dihapus",
+                tokens, invitations, resets);
     }
 }
